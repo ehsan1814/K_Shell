@@ -1,7 +1,13 @@
 import shlex
 import os
 import sys
+from prompt_toolkit import prompt
+#import prompt_toolkit
+from prompt_toolkit import *
+from prompt_toolkit.completion import *
+#from prompt_toolkit.completion import WordCompleter
 
+shell_word_completer = WordCompleter(['cd','pwd','exit','cd ..','ls'])
 
 if __name__ == "__main__":
     while True:
@@ -9,7 +15,7 @@ if __name__ == "__main__":
         #print("shell>",end="")
         #inp = sys.stdin.readline()
         
-        inp = input("shell> ")
+        inp = prompt("shell> ",completer=shell_word_completer)
         ls = shlex.split(inp)
 
         if len(ls) == 0:
