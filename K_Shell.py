@@ -4,6 +4,7 @@ import shlex
 import signal
 import readline
 
+
 bg_list = []
 
 class MyCompleter(object):  
@@ -25,7 +26,7 @@ class MyCompleter(object):
         except IndexError:
             return None
 
-completer = MyCompleter(['cd','pwd','exit','cd ..','ls','bg','bglist','bgkill','bgstop','bgstart','ping','ls -l','cat'])
+completer = MyCompleter(['cd','pwd','exit','cd ..','ls','bg','bglist','bgkill','bgstop','bgstart','ping','ls -l','cat','clear'])
 readline.set_completer(completer.complete)
 readline.parse_and_bind('tab: complete')
 
@@ -51,19 +52,32 @@ def bg(ls):
     elif char == 'bglist':
         print_bg(bg_list)
     
-    else:
+    elif char == 'bg' and len(ls)>1:
         pid = os.fork()
         if pid == 0:
             try:
                 os.execvp(ls[1],ls[1:])
-            except Exception as e:
-                print(e)
-        bg_list.append([' '.join(ls[1:]),pid,'Running',os.getcwd()])
-        
+            except:
+                if pid == 0:
+                    os._exit(0)
+                    raise Exception('command not work')
+        else:
+            bg_list.append([' '.join(ls[1:]),pid,'Running',os.getcwd()])
+    else:
+        raise Exception('command not found')
 
-    return bg_list
 
 def check_bg():
+    # os.waitpid() method returns a tuple 
+    # first attribute represents child's pid 
+    # while second one represents 
+    # exit status indication
+
+    #The waitpid function is used to request status information 
+    #from a child process whose process ID is pid . ... You can 
+    #use the WNOHANG flag to indicate that the parent process 
+    #shouldn't wait
+
     try:
         for i in range(len(bg_list)) :
             st,st2 = os.waitpid(int(bg_list[i][1]),os.WNOHANG)
@@ -77,16 +91,19 @@ def print_bg(ls):
 
     index = 0
     for a in ls :
-        print("({})-({})-({})  {}\n".format(index+1,a[2],a[0],a[3]))
+        print(colored(0,0,255,"({})-({})-({})  {}\n".format(index+1,a[2],a[0],a[3])))
         index = index + 1
-    print("Total Background jobs : {}\n".format(index))
+    print(colored(255,128,0,"Total Background jobs : {}\n".format(index)))
 
+def colored(r, g, b, text):
+    return "\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(r, g, b, text)
 
 if __name__ == "__main__":
     while True:
         
         try:
-            inp = input("shell> ")
+            inp = input(colored(255,0,0,"{} ".format(os.getcwd())))
+            #inp = input(colored(255, 0, 0, 'shell> '))
             ls = shlex.split(inp)
             
             if len(ls) == 0:
@@ -100,7 +117,7 @@ if __name__ == "__main__":
             if char == 'cd' or char == 'pwd':
                 pwd = os.getcwd()
                 if char == 'pwd':
-                    print(pwd)
+                    print(colored(0,255,0,pwd))
                     continue
 
                 os.chdir(ls[1])
@@ -115,12 +132,12 @@ if __name__ == "__main__":
                     os.execvp(char,ls)
                     
         except IndexError:
-            print('Index not found')
+            print(colored(255,128,0,'Index not found'))
         except KeyboardInterrupt as e:
-            print(e)
+            print(colored(255,128,0,e))
             exit(0)
         except EOFError as e :
-            #print(e)
+            print(colored(255,128,0,e))
             exit(0)
         except Exception as e:
-            print(e)
+            print(colored(255,128,0,e))
